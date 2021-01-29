@@ -29,13 +29,12 @@ class APIFeatures {
     }
 
     limitFields() {
-        if (this.queryString.fields) {
-            const fields = this.queryString.fields.split(',').join(' ');
-            this.query = this.query.select(fields);
+        if (this.queryString.field) {
+            const field = this.queryString.field.split(',').join(' ');
+            this.query = this.query.select(field);
         } else {
             this.query = this.query.select('-__v');
         }
-
         return this;
     }
 
