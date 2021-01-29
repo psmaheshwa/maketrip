@@ -101,7 +101,7 @@ exports.getStats = async (req, res) => {
     try{
         const stats = await Tour.aggregate([
             {
-                $match: {$ratingsAverage: {$gte: 4.5 }}
+                $match: {ratingsAverage: {$gte: 4.5 }}
             },
             {
                 $group: {
@@ -123,6 +123,7 @@ exports.getStats = async (req, res) => {
             data: stats
         });
     }catch (err) {
+        console.log(err);
         res.status(404).json({
             status: 'fail',
             message: err
