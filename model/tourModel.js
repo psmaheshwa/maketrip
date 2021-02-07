@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const slugify = require('slugify')
+const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = new mongoose.Schema({
     name: {
@@ -8,7 +9,8 @@ const tourSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         maxlength: [40, 'A tour name must have less or equal then 40 characters'],
-        minlength: [10, 'A tour name must have more or equal then 10 characters']
+        minlength: [10, 'A tour name must have more or equal then 10 characters'],
+        // validate : [validator.isAlpha, 'Tour name must contain only characters']
     },
     slug: String,
     duration: {
@@ -70,10 +72,40 @@ const tourSchema = new mongoose.Schema({
         select: false
     },
     startDates: [Date],
+
     secretTour: {
         type: Boolean,
         default: false
-    }
+    },
+},{
+    toJSON: { virtuals : true},
+    toObject : { virtuals : true}
 });
+
+tourSchema.virtual('durationWeeks').get(function () {
+    return this.duration / 7;
+})
+
+tourSchema.pre(/^find/,function (next){
+    this.find({ secretTour : { $ne: true} });
+    this.start = Date.now();
+    next();
+})
+
+tourSchema.post(/^find/, function (docs,next){
+    console.log(`Query took ${Date.now() - this.start} milliseconds`);
+    next();
+})
+
+tourSchema.pre('save', function (next){
+    this.slug = slugify(this.name, {lower:true});
+    next();
+});
+
+tourSchema.pre('aggregate', function (next){
+    this.pipeline({ $match: { $secretTour: { $ne : true}} });
+    next();
+})
+
 
 module.exports = Tour = mongoose.model('Tour',tourSchema);
